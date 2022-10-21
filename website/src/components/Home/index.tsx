@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { observer } from "mobx-react-lite"
 import { Button, Col, Layout, Row, Typography } from "antd"
 import { Link } from "react-router-dom"
@@ -6,14 +6,20 @@ import { Link } from "react-router-dom"
 import { BsCameraVideo } from "react-icons/bs"
 import { BiChalkboard, BiCommentDetail } from "react-icons/bi"
 
+import QuickStart from "components/QuickStart"
+
 const Home = observer(() => {
 
-  const quickStart = (type?: string) => {
+  const [modalOpen, setModalOpen] = useState(false)
 
+  const quickStart = (type?: string) => {
+    setModalOpen(true)
   }
 
   return (
     <React.Fragment>
+      <QuickStart open={modalOpen} onCancel={ () => setModalOpen(false) } />
+
       <Layout className="landing">
         <Layout.Header>
           <Row>
@@ -25,7 +31,7 @@ const Home = observer(() => {
             </Col>
 
             <Col className="navs">
-              <Button type="primary" onClick={() => quickStart('quick_start')}>Quick Start</Button>
+              <Button type="primary" onClick={() => quickStart('quick_start')}>快速开始</Button>
             </Col>
           </Row>
         </Layout.Header>
