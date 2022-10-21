@@ -1,0 +1,15 @@
+secret: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+port: 9000
+host: http://localhost:9000
+database:
+  dialect: mysql # mysql | postgres | sqlite | sqlserver | clickhouse
+  host: localhost
+  port: 3306
+  username: root
+  password:
+  database: great
+  encoding: utf8
+  max_idle_conns:
+  max_open_conns:
+  conn_max_life_time: # Second
+  conn_max_idle_time: # Second
