@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -30,9 +31,6 @@ func EmbedPublicAssets(router *gin.Engine) {
 
 	router.SetHTMLTemplate(tmpl)
 
-	fp, _ := fs.Sub(embedFS, "public")
-	router.StaticFS("/public", http.FS(fp))
-
 	// handle home page
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", map[string]interface{}{})
@@ -49,5 +47,23 @@ func EmbedPublicAssets(router *gin.Engine) {
 			c.AbortWithStatus(http.StatusNotFound)
 			return
 		}
+
+		filepath := "public" + c.Request.URL.Path
+
+		_, err := embedFS.Open(filepath)
+		if errors.Is(err, fs.ErrNotExist) {
+			c.HTML(http.StatusOK, "index.html", map[string]string{})
+			c.Abort()
+			return
+		}
+
+		c.FileFromFS(filepath, http.FS(embedFS))
+		c.Abort()
+	})
+
+	// handle static assets
+	router.GET("/static/*filepath", func(c *gin.Context) {
+		c.FileFromFS("public/static/"+c.Param("filepath"), http.FS(embedFS))
+		c.Abort()
 	})
 }

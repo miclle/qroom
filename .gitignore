@@ -126,3 +126,6 @@ qroom.db
 # testing
 coverage.txt
 coverage.html
+
+# binary
+cmd/qroom/qroom
