@@ -1,26 +1,39 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { observer } from 'mobx-react-lite';
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { QueryParamProvider } from 'use-query-params';
+import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6';
+import { parse, stringify } from 'query-string';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/lib/locale/zh_CN';
 
-function App() {
+import { WaitingComponent } from 'common/WaitingComponent';
+
+import { IconContext } from 'react-icons';
+
+const Home = WaitingComponent(React.lazy(() => import(/* webpackChunkName: "home" */ 'components/Home')));
+
+const App = observer(() => {
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ConfigProvider locale={zhCN}>
+      <IconContext.Provider value={{ className: 'app-icon' }}>
+        <BrowserRouter>
+          <QueryParamProvider
+            adapter={ReactRouter6Adapter}
+            options={{
+              searchStringToObject: parse,
+              objectToSearchString: stringify,
+            }}
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+            </Routes>
+          </QueryParamProvider>
+        </BrowserRouter>
+      </IconContext.Provider>
+    </ConfigProvider>
   );
-}
+})
 
 export default App;
