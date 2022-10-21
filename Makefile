@@ -53,5 +53,5 @@ build:
 	cd cmd/qroom/public; find . ! -name '.website-app-not-built.html' ! -name '.' ! -name '..' -exec rm -rf {} +
 	cd website; yarn install && yarn build
 	mv website/build/* cmd/qroom/public/
-	cd cmd/qroom; CGO_ENABLED=0 GOOS=${goos} GOARCH=${goarch} go build -tags=jsoniter -trimpath -ldflags '-s -w' ./...
+	cd cmd/qroom; GOOS=${goos} GOARCH=${goarch} go build -tags=jsoniter -trimpath -ldflags '-s -w' ./...
 	cd cmd/qroom/public; find . ! -name '.website-app-not-built.html' ! -name '.' ! -name '..' -exec rm -rf {} +
