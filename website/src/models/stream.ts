@@ -16,6 +16,19 @@ export class Stream {
     makeAutoObservable(this);
   }
 
+  pushTrack(tracks: QNTrack[]) {
+    runInAction(() => {
+
+      tracks.forEach((track) => {
+        let index = this.tracks.findIndex(item => item.trackID === track.trackID)
+        if (index < 0) {
+          this.tracks.push(track)
+        }
+      })
+
+    })
+  }
+
   // muteTrack(kind: "audio" | "video", muted: boolean) {
   //   switch (kind) {
   //     case "audio":

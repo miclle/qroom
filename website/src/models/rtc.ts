@@ -13,8 +13,8 @@ export class RTC {
 
   localStream: Stream = new Stream()
 
-  // streams: Stream[] = []
-  streams = observable.array<Stream>([], { deep: true })
+  streams: Stream[] = []
+  // streams = observable.array<Stream>([], { deep: true })
 
   constructor() {
     makeAutoObservable(this);
@@ -32,6 +32,7 @@ export class RTC {
 
     this.localStream.user_id = this.client.userID || this.info.userID
     this.localStream.tracks.push(localTracks[0], localTracks[1])
+    // this.localStream.pushTrack([localTracks[0], localTracks[1]])
     this.localStream.isLocal = true
 
     await this.client.publish(localTracks);
@@ -47,28 +48,30 @@ export class RTC {
       stream.user_id = user.userID
 
       const { videoTracks, audioTracks } = await this.client.subscribe([...user.getVideoTracks(), ...user.getAudioTracks()])
-      stream.tracks.push(...videoTracks, ...audioTracks)
+      // stream.tracks.push(...videoTracks, ...audioTracks)
+      stream.pushTrack([...videoTracks, ...audioTracks])
       this.streams.push(stream)
     })
 
     // ----------------------------------------------------------------
 
+    // !IMPORTANT user-joined / user-published 无法保证时序
     // 用户加入频道
-    this.client.on("user-joined", (remoteUserID: string, userData?: string) => {
-      runInAction(() => {
-        if (this.streams.findIndex(item => item.user_id === remoteUserID) < 0) {
-          const stream = new Stream()
-          stream.user_id = remoteUserID
-          this.streams.push(stream)
-        }
-      })
-    })
+    // this.client.on("user-joined", (remoteUserID: string, userData?: string) => {
+    //   runInAction(() => {
+    //     if (this.streams.findIndex(item => item.user_id === remoteUserID) < 0) {
+    //       const stream = new Stream()
+    //       stream.user_id = remoteUserID
+    //       this.streams.push(stream)
+    //     }
+    //   })
+    // })
 
     // 用户离开频道
     this.client.on("user-left", (remoteUserID: string) => {
       runInAction(() => {
-        const stream = this.streams.find(item => item.user_id === remoteUserID)
-        if (stream) { this.streams.remove(stream) }
+        const index = this.streams.findIndex(item => item.user_id === remoteUserID)
+        this.streams.splice(index, 1)
       })
     })
 
@@ -84,7 +87,8 @@ export class RTC {
           stream.user_id = userID
         }
 
-        stream.tracks.push(...videoTracks, ...audioTracks)
+        // stream.tracks.push(...videoTracks, ...audioTracks)
+        stream.pushTrack([...videoTracks, ...audioTracks])
         this.streams.push(stream)
       })
     })

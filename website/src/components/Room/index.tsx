@@ -40,6 +40,7 @@ const Room = observer(() => {
     }
 
     return function cleanup() {
+      console.log('level room');
       roomStore.leave()
     }
   }, [uuid, roomStore, store.user.signed_in])
