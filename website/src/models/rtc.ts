@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx"
+import { makeAutoObservable, observable, runInAction } from "mobx"
 import QNRTC, { QNRemoteAudioTrack, QNRemoteVideoTrack, QNRTCClient } from "qnweb-rtc"
 
 import { IRTCInfo, Stream } from "models";
@@ -13,7 +13,8 @@ export class RTC {
 
   localStream: Stream = new Stream()
 
-  streams: Stream[] = []
+  // streams: Stream[] = []
+  streams = observable.array<Stream>([], { deep: true })
 
   constructor() {
     makeAutoObservable(this);
@@ -40,16 +41,52 @@ export class RTC {
 
     // ----------------------------------------------------------------
 
+    this.client.remoteUsers.forEach(async (user) => {
+
+      const stream = new Stream()
+      stream.user_id = user.userID
+
+      const { videoTracks, audioTracks } = await this.client.subscribe([...user.getVideoTracks(), ...user.getAudioTracks()])
+      stream.tracks.push(...videoTracks, ...audioTracks)
+      this.streams.push(stream)
+    })
+
+    // ----------------------------------------------------------------
+
+    // 用户加入频道
+    this.client.on("user-joined", (remoteUserID: string, userData?: string) => {
+      runInAction(() => {
+        if (this.streams.findIndex(item => item.user_id === remoteUserID) < 0) {
+          const stream = new Stream()
+          stream.user_id = remoteUserID
+          this.streams.push(stream)
+        }
+      })
+    })
+
+    // 用户离开频道
+    this.client.on("user-left", (remoteUserID: string) => {
+      runInAction(() => {
+        const stream = this.streams.find(item => item.user_id === remoteUserID)
+        if (stream) { this.streams.remove(stream) }
+      })
+    })
+
+    // ----------------------------------------------------------------
+
     // 订阅远端音视频
     this.client.on("user-published", async (userID: string, qntrack: (QNRemoteAudioTrack | QNRemoteVideoTrack)[]) => {
+      runInAction(async () => {
+        const { videoTracks, audioTracks } = await this.client.subscribe(qntrack)
+        let stream = this.streams.find(item => item.user_id === userID)
+        if (stream === undefined) {
+          stream = new Stream()
+          stream.user_id = userID
+        }
 
-      // const [videoTracks, audioTracks] = await this.client.subscribe(qntrack)
-
-      // let stream = this.streams.find(item => item.user_id === userID)
-      // if (stream === undefined) { stream = new Stream() }
-
-      // stream.videoTracks = videoTracks
-      // stream.audioTracks = audioTracks
+        stream.tracks.push(...videoTracks, ...audioTracks)
+        this.streams.push(stream)
+      })
     })
 
     // 远程用户更新静音状态

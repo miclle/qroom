@@ -1,5 +1,5 @@
-import { makeAutoObservable } from "mobx"
-import { QNTrack } from "qnweb-rtc"
+import { makeAutoObservable, runInAction } from "mobx"
+import { QNLocalTrack, QNTrack } from "qnweb-rtc"
 import { IAttendee } from "models"
 
 export class Stream {
@@ -34,19 +34,14 @@ export class Stream {
   // }
 
   release() {
-    // if (this.isLocal) {
-    //   const localAudioTrack = this.audioTracks as QNLocalTrack
-    //   if (localAudioTrack) {
-    //     localAudioTrack.destroy()
-    //   }
-
-    //   const localVideoTrack = this.videoTracks as QNLocalTrack
-    //   if (localVideoTrack) {
-    //     localVideoTrack.destroy()
-    //   }
-    // }
-
-    // this.audioTracks = undefined
-    // this.videoTracks = undefined
+    runInAction(() => {
+      if (this.isLocal) {
+        this.tracks.forEach((track) => {
+          const localTrack = track as QNLocalTrack
+          localTrack.destroy()
+        })
+      }
+      this.tracks = []
+    })
   }
 }
