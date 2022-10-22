@@ -6,6 +6,10 @@
   background-position: center;
   background-size: cover;
 
+  .ant-layout-header {
+    color: #FFF;
+  }
+
   .welcome {
     position: relative;
     height: 100%;
@@ -28,16 +32,19 @@
       padding: 30px 120px;
       text-align: center;
 
-      h1 {
+      .ant-typography {
         color: #FFF;
         line-height: 1.4;
-        font-size: 3.2rem;
         font-weight: 300;
       }
 
+      h1 {
+        font-size: 3.2rem;
+        font-weight: 300;
+        margin-top: 30px;
+      }
+
       h3 {
-        color: #FFF;
-        line-height: 1.4;
         font-weight: 300;
         opacity: .85;
       }

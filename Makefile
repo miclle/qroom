@@ -44,6 +44,7 @@ serve:
 		-R 'cmd/qroom/public/' \
 		-R '^coverage' \
 		-R 'Makefile' \
+		-R 'qroom.db' \
 		-R '.log$$' \
 		-R '_test.go$$'\
 		-- go run -trimpath cmd/qroom/*.go -f cmd/qroom/config.local.yaml | tee -a development.log

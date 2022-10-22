@@ -7,10 +7,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+
+	"github.com/miclle/qroom/actions"
 	"github.com/miclle/qroom/common/logger"
 	"github.com/miclle/qroom/config"
 	"github.com/miclle/qroom/database"
+	"github.com/miclle/qroom/models"
 )
 
 func main() {
@@ -29,11 +34,22 @@ func main() {
 		log.Fatalf("failed to open database, err: %+v", err)
 	}
 
-	// migrates.AutoMigrate(log)
+	if err = models.Migrate(db.DB); err != nil {
+		log.Fatalf("auto migrate models failed, err: %+v", err)
+	}
 
 	gin.SetMode(cfg.Env)
 	router := gin.Default()
+
+	store := cookie.NewStore([]byte(cfg.Secret))
+	store.Options(sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+	})
+	router.Use(sessions.Sessions("QROOM", store))
+
 	router.Use(func(c *gin.Context) {
+		c.Set("config", cfg)
 		c.Set("db", db)
 	})
 
@@ -49,6 +65,15 @@ func main() {
 	router.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
+
+	router.POST("/api/user", actions.CreateUser)
+	router.GET("/api/user/overview", actions.UserOverview)
+
+	api := router.Group("api", actions.Auth)
+	{
+		api.POST("/rooms", actions.CreateRoom)
+		api.GET("/rooms/:uuid", actions.GetRoom, actions.GetRoomInfo)
+	}
 
 	// ------------------------------------------------------------------------
 	s := &http.Server{

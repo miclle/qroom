@@ -13,3 +13,9 @@ database:
   max_open_conns:
   conn_max_life_time: # Second
   conn_max_idle_time: # Second
+qiniu:
+  access_key: access_key
+  secret_key: secret_key
+  bucket:
+  bucket_domain:
+  rtc_app:

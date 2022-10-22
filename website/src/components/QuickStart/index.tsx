@@ -1,17 +1,34 @@
 import React from "react"
-import { Button, Modal, Form, Input, ModalProps } from "antd"
+import { AxiosResponse } from "axios";
+import { IErrorMessage } from "services/lib/http";
+import { map } from "lodash";
+import { Button, Modal, Form, Input, notification } from "antd"
 
-export interface IQuickStartOptions extends ModalProps {
-  open: boolean
-  onCancel: () => void
+import { User } from 'services';
+import { IUser } from "models";
+
+export interface IQuickStartOptions {
+  open: boolean;
+  onCancel: () => void;
+  onOk: (user: IUser) => void;
 }
 
 export default function QuickStart(options: IQuickStartOptions) {
 
   const [form] = Form.useForm()
 
-  const onFinish = async (values: any) => {
-    console.log("onFinish:", values)
+  const onFinish = (values: any) => {
+    User.create(values.name)
+      .then((user) => {
+        options.onOk(user)
+      })
+      .catch((resp: AxiosResponse<IErrorMessage>) => {
+        notification.error({
+          key: 'create-company-error',
+          message: '创建互动房间失败',
+          description: map(resp.data.message, (value, key) => value).join('\n')
+        });
+      })
   }
 
   return (

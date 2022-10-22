@@ -14,9 +14,20 @@ var Configuration *Config
 
 // Config 配置项
 type Config struct {
-	Env      string           `mapstructure:"env"`  // debug,release,test
-	Port     int              `mapstructure:"port"` // server port
-	Database *database.Config `mapstructure:"database"`
+	Env          string           `mapstructure:"env"` // debug,release,test
+	Secret       string           `mapstructure:"secret"`
+	Port         int              `mapstructure:"port"`
+	Database     *database.Config `mapstructure:"database"`
+	QiniuService *QiniuService    `mapstructure:"qiniu"`
+}
+
+// QiniuService qiniu service config
+type QiniuService struct {
+	AccessKey    string `mapstructure:"access_key"`
+	SecretKey    string `mapstructure:"secret_key"`
+	Bucket       string `mapstructure:"bucket"`
+	BucketDomain string `mapstructure:"bucket_domain"`
+	RTCAppID     string `mapstructure:"rtc_app_id"`
 }
 
 // LoadConfig load config file
