@@ -51,6 +51,7 @@ type Attendee struct {
 	UserID    int64  `json:"user_id,omitempty" gorm:"unique_index:room_user"`
 	RoomID    int64  `json:"room_id,omitempty" gorm:"unique_index:room_user"`
 	Role      Role   `json:"role"`
+	UUID      string `json:"uuid"`
 	Name      string `json:"name"`
 	CreatedAt int64  `json:"created_at"`
 	UpdatedAt int64  `json:"updated_at"`

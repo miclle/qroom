@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/oklog/ulid/v2 v2.1.0
+	github.com/qiniu/go-sdk/v7 v7.13.0
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/viper v1.13.0
 	gorm.io/driver/clickhouse v0.5.0

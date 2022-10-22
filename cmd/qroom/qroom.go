@@ -73,6 +73,7 @@ func main() {
 	{
 		api.POST("/rooms", actions.CreateRoom)
 		api.GET("/rooms/:uuid", actions.GetRoom, actions.GetRoomInfo)
+		api.GET("/rooms/:uuid/rtc", actions.GetRoom, actions.GetRoomRTC)
 	}
 
 	// ------------------------------------------------------------------------

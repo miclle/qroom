@@ -2,9 +2,9 @@ import React, { useEffect, useMemo } from "react"
 import { observer } from "mobx-react-lite"
 import { Col, Layout, Row } from "antd"
 import { Link, useParams } from "react-router-dom"
-import QNRTC from "qnweb-rtc";
 
 import { RoomContext, RoomStore } from "./context";
+import RTC from "./RTC";
 
 const Room = observer(() => {
 
@@ -13,13 +13,12 @@ const Room = observer(() => {
   const { uuid } = useParams()
 
   useEffect(() => {
-    console.log("current version is", QNRTC.VERSION);
+    store.init(uuid)
 
-    if (uuid) {
-      store.init(uuid)
+    return function cleanup() {
+      store.leave()
     }
-
-  }, [store, uuid])
+  }, [uuid, store])
 
   return (
     <RoomContext.Provider value={store}>
@@ -38,6 +37,8 @@ const Room = observer(() => {
         </Layout.Header>
 
         <Layout.Content>
+
+          { store.rtc && <RTC /> }
 
         </Layout.Content>
       </Layout>

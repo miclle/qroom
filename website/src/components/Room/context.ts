@@ -1,16 +1,17 @@
 import React from "react"
-import { makeAutoObservable } from "mobx"
-import { IAttendee, IRoom } from "models"
+import { makeAutoObservable, runInAction } from "mobx"
+
+import { IAttendee, IRoom, IRTCInfo, RTC } from "models"
 import { Room } from "services"
 
 export class RoomStore {
-  uuid?: string
+  uuid?: string;
 
-  info?: IRoom
+  info?: IRoom;
 
-  // RTC: RTC = new RTC()
+  rtc?: IRTCInfo;
 
-  // RTM: RTM = new RTM()
+  RTC: RTC = new RTC()
 
   isFullscreen: boolean = false
 
@@ -20,25 +21,25 @@ export class RoomStore {
     makeAutoObservable(this);
   }
 
-  get attendees(): IAttendee[] | undefined {
-    return this.info?.attendees
+  get attendees(): IAttendee[] {
+    return this.info?.attendees || []
   }
 
   async init(uuid?: string) {
-    if (uuid !== undefined) {
-      this.uuid = uuid
-      this.info = await Room.info(uuid)
-      // this.rtn = await Room.rtn(uuid)
+    runInAction(async () => {
+      if (uuid !== undefined) {
+        this.uuid = uuid
+        this.info = await Room.info(uuid)
+        this.rtc = await Room.rtc(uuid)
 
-      // await this.RTC.init(this.rtn)
-      // await this.RTM.init(this.rtn)
-    }
+        this.RTC.init(this.rtc)
+      }
+    })
   }
 
-  // async leave() {
-  //   await this.RTC.leave()
-  //   await this.RTM.leave()
-  // }
+  async leave() {
+    await this.RTC.leave()
+  }
 }
 
 export const RoomContext = React.createContext<RoomStore>({} as any);

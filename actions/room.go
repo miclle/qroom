@@ -3,10 +3,14 @@ package actions
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/qiniu/go-sdk/v7/auth"
+	"github.com/qiniu/go-sdk/v7/rtc"
 	"gorm.io/gorm"
 
+	"github.com/miclle/qroom/config"
 	"github.com/miclle/qroom/database"
 	"github.com/miclle/qroom/models"
 )
@@ -44,6 +48,7 @@ func CreateRoom(c *gin.Context) {
 			UserID: currentUser.ID,
 			RoomID: room.ID,
 			Role:   models.RoleAdmin,
+			UUID:   currentUser.UUID,
 			Name:   currentUser.Name,
 		}
 
@@ -61,6 +66,39 @@ func CreateRoom(c *gin.Context) {
 func GetRoomInfo(c *gin.Context) {
 	var room = c.MustGet("room").(*models.Room)
 	c.JSON(http.StatusOK, room)
+}
+
+// GetRoomRTC get room info
+func GetRoomRTC(c *gin.Context) {
+	var (
+		cfg         = c.MustGet("config").(*config.Config)
+		room        = c.MustGet("room").(*models.Room)
+		currentUser = c.MustGet("currentUser").(*models.User)
+	)
+
+	mgr := rtc.NewManager(&auth.Credentials{
+		AccessKey: cfg.QiniuService.AccessKey,
+		SecretKey: []byte(cfg.QiniuService.SecretKey),
+	})
+
+	access := rtc.RoomAccess{
+		AppID:      cfg.QiniuService.RTCAppID,
+		RoomName:   room.UUID,
+		UserID:     currentUser.UUID,
+		ExpireAt:   time.Now().Unix() + 600,
+		Permission: string(room.Self.Role),
+	}
+
+	token, err := mgr.GetRoomToken(access)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "get room token failed", "code": "INTERNAL_SERVER_ERROR"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"userID": currentUser.UUID,
+		"token":  token,
+	})
 }
 
 // middleware
@@ -89,6 +127,7 @@ func GetRoom(c *gin.Context) {
 		UserID: currentUser.ID,
 		RoomID: room.ID,
 		Role:   models.RoleUser,
+		UUID:   currentUser.UUID,
 		Name:   currentUser.Name,
 	}
 

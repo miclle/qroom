@@ -19,6 +19,13 @@ export interface IAttendee {
 	user_id:     number
 	room_id?:    number
 	role:        Role
+  uuid:        string
+  name:        string
 	created_at:  number
 	updated_at:  number
+}
+
+export interface IRTCInfo {
+  userID: string
+  token: string
 }
