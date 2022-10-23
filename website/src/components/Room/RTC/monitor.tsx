@@ -29,8 +29,8 @@ const Monitor = observer((options: IMonitorOptions) => {
     const playerElement = playerRef.current
     if (!playerElement) return
     if (!stream.videoTrack) return
-    stream.videoTrack.play(playerElement, { mirror: true })
-  }, [stream.videoTrack])
+    stream.videoTrack.play(playerElement, { mirror: stream.tag !== 'screen' })
+  }, [stream.tag, stream.videoTrack])
 
   useEffect(() => {
     const playerElement = playerRef.current
@@ -73,7 +73,7 @@ const Monitor = observer((options: IMonitorOptions) => {
       <div className="info">
         <span>
           {attendee?.name}
-          {stream.tag === 'screen' && ' 屏幕共享'}
+          {stream.tag === 'screen' && '的屏幕共享'}
         </span>
         <div className={className({ "audio-status": true, "mute": stream.audioMuted })}>
           {
