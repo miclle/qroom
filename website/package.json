@@ -4,6 +4,10 @@
   "private": true,
   "dependencies": {
     "@craco/craco": "^6.4.5",
+    "@netless/fastboard": "^0.3.6",
+    "@netless/fastboard-react": "^0.3.6",
+    "@netless/window-manager": "^0.4.49",
+    "@netless/xml-js": "^1.6.15",
     "@tanstack/react-query": "^4.12.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -28,7 +32,6 @@
     "mobx-react-lite": "^3.4.0",
     "moment": "^2.29.4",
     "qnweb-rtc": "^4.1.7",
-    "qnweb-whiteboard": "^2.2.2",
     "query-string": "^7.1.1",
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
@@ -40,6 +43,7 @@
     "typescript": "^4.8.4",
     "use-query-params": "^2.1.1",
     "web-vitals": "^3.0.4",
+    "white-web-sdk": "^2.16.36",
     "yarn": "^1.22.19"
   },
   "scripts": {

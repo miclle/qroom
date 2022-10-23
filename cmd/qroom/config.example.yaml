@@ -19,4 +19,6 @@ qiniu:
   bucket:
   bucket_domain:
   rtc_app:
-  whiteboard_app_id:
+whiteboard:
+  app_id:
+  token:

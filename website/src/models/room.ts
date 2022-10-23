@@ -1,14 +1,14 @@
 export interface IRoom {
-  id:                    number
-  uuid:                  string
-  name:                  string
-  state:                 string
-  admin_id:              number
-  whiteboard_meeting_id: string
-  created_at:            number
-  updated_at:            number
-  attendees:             IAttendee[]
-  self:                  IAttendee
+  id:            number
+  uuid:          string
+  name:          string
+  state:         string
+  admin_id:      number
+  whiteboard_id: string
+  created_at:    number
+  updated_at:    number
+  attendees:     IAttendee[]
+  self:          IAttendee
 }
 
 export enum Role {
@@ -31,9 +31,9 @@ export interface IRTCInfo {
   token:  string
 }
 
-export interface IWhiteBoardInfo {
-  user_id:    string
+export interface IWhiteboardInfo {
   app_id:     string
-  meeting_id: string
-  token:      string
+  user_id:    string
+  room_uuid:  string
+  room_token: string
 }

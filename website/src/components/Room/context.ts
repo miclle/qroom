@@ -1,7 +1,7 @@
 import React from "react"
 import { makeAutoObservable, runInAction } from "mobx"
 
-import { IAttendee, IRoom, IRTCInfo, IWhiteBoardInfo, RTC } from "models"
+import { IAttendee, IRoom, IRTCInfo, IWhiteboardInfo, RTC } from "models"
 import { Room } from "services"
 
 export class RoomStore {
@@ -11,7 +11,7 @@ export class RoomStore {
 
   rtc?: IRTCInfo;
 
-  whiteboard?: IWhiteBoardInfo
+  whiteboard?: IWhiteboardInfo
 
   RTC: RTC = new RTC()
 

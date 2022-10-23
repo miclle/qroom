@@ -1,49 +1,29 @@
-import React, { useEffect, useRef } from "react"
+import React from "react"
 import { observer } from "mobx-react-lite"
-import QNWhiteBoard from "qnweb-whiteboard";
-import { useRoomStore } from "./context"
 
-const client = QNWhiteBoard.create();
+import { useFastboard, Fastboard } from "@netless/fastboard-react";
+
+import { useRoomStore } from "./context"
 
 const WhiteBoard = observer(() => {
 
   const roomStore = useRoomStore()
 
-  const whiteboardRef = useRef<HTMLDivElement>(null)
-
-  console.log("QNWhiteBoard current version is", QNWhiteBoard.version);
-
-  useEffect(() => {
-    if (whiteboardRef.current === null) return
-    if (roomStore.whiteboard === undefined) return
-
-    console.log('whiteboardRef.current', whiteboardRef.current);
-
-    client.initConfig({
-      path: '/webassembly/whiteboardcanvas.html',
-      el: whiteboardRef.current,
-    })
-
-    client.registerRoomEvent({
-      onJoinSuccess: () => console.log('onJoinSuccess'),
-      onJoinFailed: () => console.log('onJoinFailed'),
-      onRoomStatusChanged: () => console.log('onRoomStatusChanged'),
-    })
-
-    const appId = roomStore.whiteboard.app_id
-    const meetingId = roomStore.whiteboard.meeting_id
-    const userId = roomStore.whiteboard.user_id
-    const token = roomStore.whiteboard.token
-
-
-    // client.joinRoom(appId, meetingId, userId, token);
-
-  }, [roomStore.whiteboard])
+  const fastboard = useFastboard(() => ({
+    sdkConfig: {
+      appIdentifier: roomStore.whiteboard!.app_id,
+      region: "cn-hz",
+    },
+    joinRoom: {
+      uid: roomStore.whiteboard!.user_id,
+      uuid: roomStore.whiteboard!.room_uuid,
+      roomToken: roomStore.whiteboard!.room_token,
+    },
+  }));
 
   return (
     <div id="whiteboard">
-      <h1>WhiteBoard</h1>
-      <div id="iframeBox" ref={whiteboardRef}></div>
+      <Fastboard app={fastboard} />
     </div>
   )
 })

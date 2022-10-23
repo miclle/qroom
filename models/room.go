@@ -25,7 +25,7 @@ type Room struct {
 	CreatedAt int64     `json:"created_at"`
 	UpdatedAt int64     `json:"updated_at"`
 
-	WhiteBoardMeetingID string `json:"whiteboard_meeting_id"`
+	WhiteboardID string `json:"whiteboard_id"`
 
 	Attendees []Attendee `json:"attendees"`
 	Self      Attendee   `json:"self"`

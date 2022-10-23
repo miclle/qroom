@@ -19,16 +19,22 @@ type Config struct {
 	Port         int              `mapstructure:"port"`
 	Database     *database.Config `mapstructure:"database"`
 	QiniuService *QiniuService    `mapstructure:"qiniu"`
+	Whiteboard   *Whiteboard      `mapstructure:"whiteboard"`
 }
 
 // QiniuService qiniu service config
 type QiniuService struct {
-	AccessKey       string `mapstructure:"access_key"`
-	SecretKey       string `mapstructure:"secret_key"`
-	Bucket          string `mapstructure:"bucket"`
-	BucketDomain    string `mapstructure:"bucket_domain"`
-	RTCAppID        string `mapstructure:"rtc_app_id"`
-	WhiteboardAppID string `mapstructure:"whiteboard_app_id"`
+	AccessKey    string `mapstructure:"access_key"`
+	SecretKey    string `mapstructure:"secret_key"`
+	Bucket       string `mapstructure:"bucket"`
+	BucketDomain string `mapstructure:"bucket_domain"`
+	RTCAppID     string `mapstructure:"rtc_app_id"`
+}
+
+// Whiteboard config
+type Whiteboard struct {
+	AppID string `mapstructure:"app_id"`
+	Token string `mapstructure:"token"`
 }
 
 // LoadConfig load config file

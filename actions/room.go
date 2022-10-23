@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -41,7 +40,7 @@ func CreateRoom(c *gin.Context) {
 		return
 	}
 
-	whiteboardToken, err := createWhiteBoard(cfg)
+	whiteboard, err := createWhiteBoard(cfg)
 	if err != nil {
 		c.AbortWithError(500, err)
 		return
@@ -49,9 +48,9 @@ func CreateRoom(c *gin.Context) {
 
 	db.Transaction(func(tx *gorm.DB) error {
 		room = &models.Room{
-			AdminID:             currentUser.ID,
-			State:               models.RoomStateActive,
-			WhiteBoardMeetingID: whiteboardToken.MeetingID,
+			AdminID:      currentUser.ID,
+			State:        models.RoomStateActive,
+			WhiteboardID: whiteboard.UUID,
 		}
 		if err := tx.Create(room).Error; err != nil {
 			return err
@@ -117,29 +116,51 @@ func GetRoomRTC(c *gin.Context) {
 // ----------------------------------------------------------------------------
 
 // GetRoomWhiteBoard get room white board info
+// https://docs.agora.io/cn/whiteboard/generate_whiteboard_token#%E7%94%9F%E6%88%90-room-token%EF%BC%88post%EF%BC%89
 func GetRoomWhiteBoard(c *gin.Context) {
 	var (
 		cfg         = c.MustGet("config").(*config.Config)
+		db          = c.MustGet("db").(*database.Database)
 		room        = c.MustGet("room").(*models.Room)
 		currentUser = c.MustGet("currentUser").(*models.User)
 	)
 
-	query := url.Values{}
-	query.Set("userId", currentUser.UUID)
-	query.Set("meetingId", room.WhiteBoardMeetingID)
+	if room.WhiteboardID == "" {
+		whiteboard, err := createWhiteBoard(cfg)
+		if err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
 
-	// /v4/apps/{appId}/board/user/token?userId=11111aa&meetingId=2c03d88f46f3468faab89f2fe0164a97&userIds=111,bbb
-	url := fmt.Sprintf("https://rtc.qiniuapi.com/v4/apps/%s/board/user/token?%s", cfg.QiniuService.RTCAppID, query.Encode())
+		room.WhiteboardID = whiteboard.UUID
 
-	req, err := http.NewRequest("GET", url, nil)
+		if err := db.Model(room).Update("whiteboard_id", whiteboard.UUID).Error; err != nil {
+			c.AbortWithError(500, err)
+			return
+		}
+	}
+
+	url := fmt.Sprintf("https://api.netless.link/v5/tokens/rooms/%s", room.WhiteboardID)
+
+	args := map[string]interface{}{
+		"lifespan": 0,
+		"role":     "admin",
+	}
+
+	data, _ := json.Marshal(args)
+
+	req, err := http.NewRequest("POST", url, bytes.NewReader(data))
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "get whiteboard token failed", "code": "INTERNAL_SERVER_ERROR"})
+		c.AbortWithError(500, err)
 		return
 	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("token", cfg.Whiteboard.Token)
+	req.Header.Add("region", "cn-hz")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "get whiteboard token failed", "code": "INTERNAL_SERVER_ERROR"})
+		c.AbortWithError(500, err)
 		return
 	}
 
@@ -156,17 +177,18 @@ func GetRoomWhiteBoard(c *gin.Context) {
 		return
 	}
 
-	var token = &WhiteBoardToken{}
-	err = json.NewDecoder(resp.Body).Decode(token)
+	var token string
+	err = json.NewDecoder(resp.Body).Decode(&token)
 	if err != nil {
-		c.AbortWithError(resp.StatusCode, err)
+		c.AbortWithError(500, err)
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(200, gin.H{
+		"app_id":     cfg.Whiteboard.AppID,
 		"user_id":    currentUser.UUID,
-		"app_id":     token.AppID,
-		"meeting_id": room.WhiteBoardMeetingID,
-		"token":      token.UserTokens[currentUser.UUID],
+		"room_uuid":  room.WhiteboardID,
+		"room_token": token,
 	})
 }
 
@@ -222,43 +244,28 @@ func GetRoom(c *gin.Context) {
 
 // ----------------------------------------------------------------------------
 
-// WhiteBoardToken whiteboard token
-type WhiteBoardToken struct {
-	AppID      string            `json:"appId"`
-	MeetingID  string            `json:"meetingId"`
-	BucketID   string            `json:"bucketId"`
-	UserTokens map[string]string `json:"userTokens"`
+// WhiteBoardRoom whiteboard token
+type WhiteBoardRoom struct {
+	UUID      string    `json:"uuid"`
+	TeamUUID  string    `json:"teamUUID"`
+	AppUUID   string    `json:"appUUID"`
+	IsRecord  bool      `json:"isRecord"`
+	IsBan     bool      `json:"isBan"`
+	CreatedAt time.Time `json:"createdAt"`
+	Limit     int       `json:"limit"`
 }
 
 // createWhiteBoard get room white board info
-func createWhiteBoard(cfg *config.Config) (*WhiteBoardToken, error) {
+// https://docs.agora.io/cn/whiteboard/whiteboard_room_management?platform=RESTful
+func createWhiteBoard(cfg *config.Config) (*WhiteBoardRoom, error) {
 
-	mac := &auth.Credentials{
-		AccessKey: cfg.QiniuService.AccessKey,
-		SecretKey: []byte(cfg.QiniuService.SecretKey),
-	}
-
-	args := map[string]interface{}{
-		"type":        0,
-		"aspectRatio": 1.33,
-		"zoomScale":   1,
-		"userIds":     []string{},
-	}
-
-	reqData, _ := json.Marshal(args)
-
-	url := fmt.Sprintf("https://rtc.qiniuapi.com/v4/apps/%s/board/meeting", cfg.QiniuService.RTCAppID)
-	req, err := http.NewRequest("POST", url, bytes.NewReader(reqData))
+	req, err := http.NewRequest("POST", "https://api.netless.link/v5/rooms", nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
-
-	accessToken, err := mac.SignRequestV2(req)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Authorization", "Qiniu "+accessToken)
+	req.Header.Add("token", cfg.Whiteboard.Token)
+	req.Header.Add("region", "cn-hz")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -277,7 +284,7 @@ func createWhiteBoard(cfg *config.Config) (*WhiteBoardToken, error) {
 		return nil, errors.New(http.StatusText(resp.StatusCode))
 	}
 
-	var token = &WhiteBoardToken{}
+	var token = &WhiteBoardRoom{}
 	err = json.NewDecoder(resp.Body).Decode(token)
 	if err != nil {
 		return nil, err
