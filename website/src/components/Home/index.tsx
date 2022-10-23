@@ -4,6 +4,7 @@ import { Button, Col, Form, Input, Layout, Modal, notification, Row, Typography 
 import { Link } from "react-router-dom"
 import { BsCameraVideo } from "react-icons/bs"
 import { BiChalkboard, BiCommentDetail } from "react-icons/bi"
+import { AiOutlineFolderOpen } from "react-icons/ai"
 
 import { useGlobalContext } from "GlobalStore"
 import { IUser } from "models"
@@ -98,6 +99,10 @@ const Home = observer(() => {
                   <li className="list-inline-item">
                     <Button shape="circle" onClick={() => quickStart('board')}><BiChalkboard /></Button>
                     <span>互动白板</span>
+                  </li>
+                  <li className="list-inline-item">
+                    <Button shape="circle" onClick={() => quickStart('board')}><AiOutlineFolderOpen /></Button>
+                    <span>文件共享</span>
                   </li>
                   <li className="list-inline-item">
                     <Button shape="circle" onClick={() => quickStart('im')}><BiCommentDetail /></Button>
