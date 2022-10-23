@@ -9,6 +9,7 @@ import { useGlobalContext } from "GlobalStore";
 import { RoomContext, RoomStore } from "./context";
 import Navbar from "./Navbar";
 import RTC from "./RTC";
+import Chat from "./Chat";
 
 const Room = observer(() => {
 
@@ -76,6 +77,7 @@ const Room = observer(() => {
             store.user.signed_in &&
             <Layout.Content>
               {roomStore.rtc && <RTC />}
+              {roomStore.rtc && <Chat />}
             </Layout.Content>
           }
         </Layout>

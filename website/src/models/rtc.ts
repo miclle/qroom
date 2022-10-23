@@ -1,7 +1,7 @@
 import { makeAutoObservable, runInAction } from "mobx"
-import QNRTC, { QNRemoteAudioTrack, QNRemoteTrack, QNRemoteVideoTrack, QNRTCClient, QNScreenVideoTrack } from "qnweb-rtc"
+import QNRTC, { QNCustomMessage, QNRemoteAudioTrack, QNRemoteTrack, QNRemoteVideoTrack, QNRTCClient, QNScreenVideoTrack } from "qnweb-rtc"
 
-import { IRTCInfo, Stream } from "models";
+import { ChatMessage, IRTCInfo, Stream } from "models";
 
 export class RTC {
 
@@ -17,6 +17,8 @@ export class RTC {
 
   streams: Stream[] = []
   // streams = observable.array<Stream>([], { deep: true })
+
+  chatMessages: ChatMessage[] = []
 
   constructor() {
     makeAutoObservable(this);
@@ -91,6 +93,25 @@ export class RTC {
         })
 
         this.muteStateChanged([...videoTracks, ...audioTracks])
+      })
+    })
+
+    // ----------------------------------------------------------------
+
+    // 当接收到远端发送的自定义消息
+    this.client.on('message-received', (customMessage: QNCustomMessage) => {
+      console.log('message-received', customMessage)
+
+      runInAction(async () => {
+
+        const message: ChatMessage = {
+          id: customMessage.ID,
+          uid: customMessage.userID,
+          content: customMessage.content,
+          timestamp: customMessage.timestamp,
+        }
+
+        this.chatMessages.push(message)
       })
     })
   }
@@ -169,6 +190,11 @@ export class RTC {
 
   setLocalTrackMute(kind: "audio" | "video", muted: boolean) {
     this.localStream.muteTrack(kind, muted)
+  }
+
+  // 发送的自定义消息
+  sendMessage(message: ChatMessage): Promise<void> {
+    return this.client.sendMessage(message.id, message.content)
   }
 
   async leave() {
