@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable, runInAction } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
 import QNRTC, { QNRemoteAudioTrack, QNRemoteVideoTrack, QNRTCClient } from "qnweb-rtc"
 
 import { IRTCInfo, Stream } from "models";
@@ -55,16 +55,8 @@ export class RTC {
 
     // ----------------------------------------------------------------
 
-    // !IMPORTANT user-joined / user-published 无法保证时序
     // 用户加入频道
     // this.client.on("user-joined", (remoteUserID: string, userData?: string) => {
-    //   runInAction(() => {
-    //     if (this.streams.findIndex(item => item.user_id === remoteUserID) < 0) {
-    //       const stream = new Stream()
-    //       stream.user_id = remoteUserID
-    //       this.streams.push(stream)
-    //     }
-    //   })
     // })
 
     // 用户离开频道
@@ -79,17 +71,16 @@ export class RTC {
 
     // 订阅远端音视频
     this.client.on("user-published", async (userID: string, qntrack: (QNRemoteAudioTrack | QNRemoteVideoTrack)[]) => {
-      runInAction(async () => {
+      runInAction(async() => {
         const { videoTracks, audioTracks } = await this.client.subscribe(qntrack)
         let stream = this.streams.find(item => item.user_id === userID)
         if (stream === undefined) {
           stream = new Stream()
           stream.user_id = userID
+          this.streams.push(stream)
         }
 
-        // stream.tracks.push(...videoTracks, ...audioTracks)
         stream.pushTrack([...videoTracks, ...audioTracks])
-        this.streams.push(stream)
       })
     })
 

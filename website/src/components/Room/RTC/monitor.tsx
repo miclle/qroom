@@ -4,20 +4,21 @@ import { QNCameraVideoTrack, QNLocalAudioTrack, QNMicrophoneAudioTrack, QNRemote
 import className from "classnames"
 import { BiMicrophoneOff } from "react-icons/bi"
 
-import { IAttendee } from "models"
+import { IAttendee, Stream } from "models"
 import { useRoomStore } from "../context"
 import AudioVolume from "./AudioVolume"
 
 interface IMonitorOptions {
   user_id: string
   isLocal: boolean
-  tracks: QNTrack[]
+  stream: Stream
+  // tracks: QNTrack[]
 }
 
 const Monitor = observer((options: IMonitorOptions) => {
   const roomStore = useRoomStore()
 
-  const { user_id, isLocal, tracks } = options
+  const { user_id, isLocal, stream } = options
 
   const [attendee, setAttendee] = useState<IAttendee | undefined>(undefined)
   const playerRef = useRef<HTMLDivElement>(null)
@@ -26,20 +27,33 @@ const Monitor = observer((options: IMonitorOptions) => {
   const [videoTrack, setVideoTrack] = useState<QNCameraVideoTrack | QNScreenVideoTrack | QNRemoteVideoTrack>()
 
   useEffect(() => {
-    const playerElement = playerRef.current
-    if (!playerElement) return
+    stream.tracks.forEach((track) => {
 
-    tracks.forEach((track) => {
+      const playerElement = playerRef.current
+      if (!playerElement) return
+
+      const tag = track.tag || 'other'
+
+      let span
+      let elements = playerRef.current.getElementsByClassName(tag)
+      if (elements.length > 0) {
+        span = elements[0] as HTMLElement
+      } else {
+        span = document.createElement('span');
+        span.className = tag
+        playerRef.current.appendChild(span);
+      }
+
       if (track.isAudio()) {
         setAudioTrack(track as QNMicrophoneAudioTrack | QNLocalAudioTrack | QNRemoteAudioTrack)
-        if (!isLocal) track.play(playerElement)
+        if (!isLocal) track.play(span)
       }
       if (track.isVideo()) {
         setVideoTrack(track as QNCameraVideoTrack | QNScreenVideoTrack | QNRemoteVideoTrack)
-        track.play(playerElement)
+        track.play(span, { mirror: true })
       }
     })
-  }, [isLocal, tracks])
+  }, [isLocal, stream.tracks])
 
   useEffect(() => {
     const attendee = roomStore.attendees?.find(item => item.uuid === user_id)
@@ -47,18 +61,10 @@ const Monitor = observer((options: IMonitorOptions) => {
       setAttendee(attendee)
       return
     }
-    // if (user_id !== undefined) {
-    //   const user_id = +user_id
-    //   const attendee = roomStore.attendees?.find(item => item.uuid === user_id)
-    //   if (attendee !== undefined) {
-    //     attendee.name = `${attendee.name}'s Screensharing`
-    //     setAttendee(attendee)
-    //   }
-    // }
   }, [user_id, roomStore.attendees])
 
   return (
-    <div id={`monitor-${user_id}`} className="monitor">
+    <div id={`monitor-${user_id}`} className={className({ "monitor": true, "isLocal": isLocal })}>
       <svg role="img" viewBox="0 0 16 9" xmlns="http:www.w3.org/2000/svg"></svg>
 
       <div className="cover" />
