@@ -10,7 +10,7 @@ import { TbScreenShare } from "react-icons/tb"
 import { AiOutlineLink, AiOutlineSetting } from "react-icons/ai"
 import { FaSignOutAlt } from "react-icons/fa"
 import { BsCameraVideo, BsCameraVideoOff } from "react-icons/bs"
-import {VscScreenNormal, VscScreenFull} from "react-icons/vsc"
+import { VscScreenNormal, VscScreenFull } from "react-icons/vsc"
 
 import { useGlobalContext } from "GlobalStore"
 import { useRoomStore } from "./context"
@@ -100,7 +100,7 @@ const Navbar = observer(() => {
 
             <li className="nav-item">
               <Tooltip placement="bottom" title="分享屏幕">
-                <Button type="link" onClick={() => roomStore.RTC.shareScreen()}>
+                <Button type="link" onClick={() => roomStore.RTC.shareScreen()} disabled={roomStore.RTC.localScreenStream !== undefined}>
                   <TbScreenShare size={22} />
                 </Button>
               </Tooltip>

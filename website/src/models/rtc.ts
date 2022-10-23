@@ -96,6 +96,24 @@ export class RTC {
       })
     })
 
+    // 远端音视频取消发布
+    this.client.on("user-unpublished", async (userID: string, qntrack: (QNRemoteAudioTrack | QNRemoteVideoTrack)[]) => {
+      runInAction(async () => {
+        qntrack.forEach((track) => {
+          const index = this.streams.findIndex(item => item.user_id === userID && item.tag === track.tag)
+          if (index >= 0) {
+            const stream = this.streams[index]
+            if (track.isAudio()) { stream.audioTrack = undefined }
+            if (track.isVideo()) { stream.videoTrack = undefined }
+
+            if (stream.audioTrack === undefined && stream.videoTrack === undefined) {
+              this.streams.splice(index, 1)
+            }
+          }
+        })
+      })
+    })
+
     // ----------------------------------------------------------------
 
     // 当接收到远端发送的自定义消息
@@ -175,9 +193,21 @@ export class RTC {
 
     this.localScreenStream = new Stream()
     this.localScreenStream.user_id = this.info.userID
+    this.localScreenStream.tag = 'screen'
     this.localScreenStream.isLocal = true
     this.localScreenStream.videoTrack = screenTrack
     this.streams.push(this.localScreenStream)
+
+    screenTrack.on('ended', () => {
+      console.log('screen ended')
+      const index = this.streams.findIndex(item => item.user_id === this.info?.userID && item.tag === 'screen')
+      if (index >= 0) {
+        const stream = this.streams[index]
+        stream.videoTrack = undefined
+        this.streams.splice(index, 1)
+        this.localScreenStream = undefined
+      }
+    })
   }
 
   // setLocalVideoTrackClarity(clarity: VideoEncoderConfigurationPreset) {
