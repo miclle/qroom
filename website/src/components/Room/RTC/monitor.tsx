@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react"
 import { observer } from "mobx-react-lite"
 import className from "classnames"
+import { Button } from "antd"
 import { BiMicrophoneOff } from "react-icons/bi"
 
 import { IAttendee, Stream } from "models"
 import { useRoomStore } from "../context"
 import AudioVolume from "./AudioVolume"
+import { VscScreenFull, VscScreenNormal } from "react-icons/vsc"
 
 interface IMonitorOptions {
   user_id: string
@@ -17,6 +19,8 @@ const Monitor = observer((options: IMonitorOptions) => {
   const roomStore = useRoomStore()
 
   const { user_id, isLocal, stream } = options
+
+  const streamID = `${user_id}-${stream.tag}`
 
   const [attendee, setAttendee] = useState<IAttendee | undefined>(undefined)
   const playerRef = useRef<HTMLDivElement>(null)
@@ -45,7 +49,14 @@ const Monitor = observer((options: IMonitorOptions) => {
   }, [user_id, roomStore.attendees])
 
   return (
-    <div id={`monitor-${user_id}`} className={className({ "monitor": true, "isLocal": isLocal })}>
+    <div
+      id={`monitor-${user_id}`}
+      className={className({
+        "monitor": true,
+        "isLocal": isLocal,
+        "active": roomStore.stageStreamID === streamID
+      })}
+    >
       <svg role="img" viewBox="0 0 16 9" xmlns="http:www.w3.org/2000/svg"></svg>
 
       <div className="cover" />
@@ -72,6 +83,19 @@ const Monitor = observer((options: IMonitorOptions) => {
             (stream.audioTrack && stream.audioMuted) && <BiMicrophoneOff height={18} />
           }
         </div>
+      </div>
+
+      <div className="actions">
+        <Button
+          size="small"
+          type="link"
+          onClick={() => roomStore.setStageStream(roomStore.stageStreamID === streamID ? '' : streamID)}>
+          {
+            roomStore.stageStreamID === streamID
+            ? <VscScreenNormal size={22} />
+            : <VscScreenFull size={22} />
+          }
+        </Button>
       </div>
     </div>
   )

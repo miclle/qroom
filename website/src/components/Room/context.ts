@@ -19,6 +19,8 @@ export class RoomStore {
 
   chatPopUp: boolean = false
 
+  stageStreamID: string = ''
+
   constructor() {
     makeAutoObservable(this);
   }
@@ -38,6 +40,12 @@ export class RoomStore {
 
         this.RTC.init(this.rtc)
       }
+    })
+  }
+
+  setStageStream(id: string) {
+    runInAction(() => {
+      this.stageStreamID = id
     })
   }
 

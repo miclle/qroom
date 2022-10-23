@@ -35,6 +35,11 @@ const Navbar = observer(() => {
     }
   }, [roomStore])
 
+  const showWhiteboard = () => {
+    roomStore.setStageStream('');
+    setFolderModalVisible(false);
+  }
+
   // 全屏切换
   const switchFullscreen = () => {
     roomStore.isFullscreen ? fscreen.exitFullscreen() : fscreen.requestFullscreen(document.documentElement)
@@ -86,7 +91,7 @@ const Navbar = observer(() => {
 
             <li className="nav-item">
               <Tooltip placement="bottom" title="白板">
-                <Button type="link">
+                <Button type="link" onClick={() => showWhiteboard()}>
                   <BiChalkboard size={22} />
                 </Button>
               </Tooltip>
