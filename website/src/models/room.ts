@@ -37,3 +37,14 @@ export interface IWhiteboardInfo {
   room_uuid:  string
   room_token: string
 }
+
+export interface IFileItem {
+  key:      string
+	hash:     string
+	fsize:    number
+	putTime:  number
+	mimeType: string
+	type:     number
+	endUser:  string
+  url:      string
+}

@@ -7,13 +7,14 @@ import CopyToClipboard from "react-copy-to-clipboard"
 import { FiUsers } from "react-icons/fi";
 import { BiChalkboard, BiCommentDetail, BiMicrophone, BiMicrophoneOff } from "react-icons/bi"
 import { TbScreenShare } from "react-icons/tb"
-import { AiOutlineLink, AiOutlineSetting } from "react-icons/ai"
+import { AiOutlineFolderOpen, AiOutlineLink, AiOutlineSetting } from "react-icons/ai"
 import { FaSignOutAlt } from "react-icons/fa"
 import { BsCameraVideo, BsCameraVideoOff } from "react-icons/bs"
 import { VscScreenNormal, VscScreenFull } from "react-icons/vsc"
 
 import { useGlobalContext } from "GlobalStore"
 import { useRoomStore } from "./context"
+import FileBox from "./FileBox"
 
 // import Settings from "./settings"
 
@@ -24,6 +25,7 @@ const Navbar = observer(() => {
   const shareLink = `http://localhost:9000/room/${roomStore.info?.uuid}`
 
   const [invitePeopleModalVisible, setInvitePeopleModalVisible] = useState(false)
+  const [folderModalVisible, setFolderModalVisible] = useState(false)
   const [settingsModalVisible, setSettingsModalVisible] = useState(false)
 
   // 全屏事件监听
@@ -88,6 +90,25 @@ const Navbar = observer(() => {
                   <BiChalkboard size={22} />
                 </Button>
               </Tooltip>
+            </li>
+
+            <li className="nav-item">
+              <Tooltip placement="bottom" title="共享文件">
+                <Button type="link" onClick={() => setFolderModalVisible(true)}>
+                  <AiOutlineFolderOpen size={22} />
+                </Button>
+              </Tooltip>
+
+              <Modal
+                title="共享文件"
+                open={folderModalVisible}
+                onCancel={() => setFolderModalVisible(false)}
+                width={1000}
+                footer={null}
+                bodyStyle={{ padding: 0 }}
+              >
+                <FileBox />
+              </Modal>
             </li>
 
             <li className="nav-item">

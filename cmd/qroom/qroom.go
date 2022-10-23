@@ -75,6 +75,8 @@ func main() {
 		api.GET("/rooms/:uuid", actions.GetRoom, actions.GetRoomInfo)
 		api.GET("/rooms/:uuid/rtc", actions.GetRoom, actions.GetRoomRTC)
 		api.GET("/rooms/:uuid/whiteboard", actions.GetRoom, actions.GetRoomWhiteBoard)
+		api.GET("/rooms/:uuid/files", actions.GetRoom, actions.ListFiles)
+		api.POST("/rooms/:uuid/files", actions.GetRoom, actions.UpdateFiles)
 	}
 
 	// ------------------------------------------------------------------------

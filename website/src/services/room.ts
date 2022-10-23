@@ -1,6 +1,6 @@
 import { GET, POST } from "./lib/http";
 
-import { IRoom, IRTCInfo, IWhiteboardInfo } from "models";
+import { IFileItem, IRoom, IRTCInfo, IWhiteboardInfo } from "models";
 
 export function create(args?: Partial<IRoom>): Promise<IRoom> {
   return POST<IRoom>('/rooms', args);
@@ -17,3 +17,11 @@ export function rtc(uuid: string): Promise<IRTCInfo> {
 export function whiteboard(uuid: string): Promise<IWhiteboardInfo> {
   return GET<IWhiteboardInfo>(`/rooms/${uuid}/whiteboard`);
 }
+
+export function files(uuid: string): Promise<IFileItem[]> {
+  return GET<IFileItem[]>(`/rooms/${uuid}/files`);
+}
+
+// export function uploadFiles(uuid: string): Promise<IFileItem[]> {
+//   return GET<IFileItem[]>(`/rooms/${uuid}/files`);
+// }
