@@ -9,6 +9,7 @@ import { AiOutlineFolderOpen } from "react-icons/ai"
 import { useGlobalContext } from "GlobalStore"
 import { IUser } from "models"
 import { Room, User } from "services"
+import { TbScreenShare } from "react-icons/tb"
 
 const Home = observer(() => {
 
@@ -89,7 +90,7 @@ const Home = observer(() => {
                 <Typography.Title level={2}>{`嗨，${store.user.name}`}</Typography.Title>
               }
               <Typography.Title level={1}>与你的家人、朋友和同事互动</Typography.Title>
-              <Typography.Title level={3}>在 QROOM，你可以召开视频会议，使用白板分享你的想法，与你喜欢的人发信息聊天。</Typography.Title>
+              <Typography.Title level={3}>在 QROOM，你可以召开视频会议、共享文件，使用白板分享你的想法，与你喜欢的人发信息聊天。</Typography.Title>
               <div className="feature-actions">
                 <ul className="list-inline">
                   <li className="list-inline-item">
@@ -97,12 +98,16 @@ const Home = observer(() => {
                     <span>实时视频</span>
                   </li>
                   <li className="list-inline-item">
-                    <Button shape="circle" onClick={() => quickStart('board')}><BiChalkboard /></Button>
-                    <span>互动白板</span>
+                    <Button shape="circle" onClick={() => quickStart('files')}><AiOutlineFolderOpen /></Button>
+                    <span>文件共享</span>
                   </li>
                   <li className="list-inline-item">
-                    <Button shape="circle" onClick={() => quickStart('board')}><AiOutlineFolderOpen /></Button>
-                    <span>文件共享</span>
+                    <Button shape="circle" onClick={() => quickStart('files')}><TbScreenShare /></Button>
+                    <span>分享屏幕</span>
+                  </li>
+                  <li className="list-inline-item">
+                    <Button shape="circle" onClick={() => quickStart('board')}><BiChalkboard /></Button>
+                    <span>互动白板</span>
                   </li>
                   <li className="list-inline-item">
                     <Button shape="circle" onClick={() => quickStart('im')}><BiCommentDetail /></Button>
