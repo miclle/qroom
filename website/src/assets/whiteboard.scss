@@ -1,8 +1,16 @@
+.fastboard-bottom-left {
+  bottom: auto !important;
+  top: 8px !important;
+}
 
 .fastboard-bottom-right {
-  right: auto !important;
-  left: 8px !important;
-  bottom: 50px !important;
+  bottom: auto !important;
+  top: 8px !important;
+}
+
+.netless-window-manager-wrapper {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 #whiteboard{
