@@ -1,8 +1,13 @@
 package actions
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +30,7 @@ func CreateRoom(c *gin.Context) {
 
 	var (
 		args        = QuickStartArgs{}
+		cfg         = c.MustGet("config").(*config.Config)
 		db          = c.MustGet("db").(*database.Database)
 		currentUser = c.MustGet("currentUser").(*models.User)
 		room        *models.Room
@@ -35,10 +41,17 @@ func CreateRoom(c *gin.Context) {
 		return
 	}
 
+	whiteboardToken, err := createWhiteBoard(cfg)
+	if err != nil {
+		c.AbortWithError(500, err)
+		return
+	}
+
 	db.Transaction(func(tx *gorm.DB) error {
 		room = &models.Room{
-			AdminID: currentUser.ID,
-			State:   models.RoomStateActive,
+			AdminID:             currentUser.ID,
+			State:               models.RoomStateActive,
+			WhiteBoardMeetingID: whiteboardToken.MeetingID,
 		}
 		if err := tx.Create(room).Error; err != nil {
 			return err
@@ -101,6 +114,62 @@ func GetRoomRTC(c *gin.Context) {
 	})
 }
 
+// ----------------------------------------------------------------------------
+
+// GetRoomWhiteBoard get room white board info
+func GetRoomWhiteBoard(c *gin.Context) {
+	var (
+		cfg         = c.MustGet("config").(*config.Config)
+		room        = c.MustGet("room").(*models.Room)
+		currentUser = c.MustGet("currentUser").(*models.User)
+	)
+
+	query := url.Values{}
+	query.Set("userId", currentUser.UUID)
+	query.Set("meetingId", room.WhiteBoardMeetingID)
+
+	// /v4/apps/{appId}/board/user/token?userId=11111aa&meetingId=2c03d88f46f3468faab89f2fe0164a97&userIds=111,bbb
+	url := fmt.Sprintf("https://rtc.qiniuapi.com/v4/apps/%s/board/user/token?%s", cfg.QiniuService.RTCAppID, query.Encode())
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "get whiteboard token failed", "code": "INTERNAL_SERVER_ERROR"})
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "get whiteboard token failed", "code": "INTERNAL_SERVER_ERROR"})
+		return
+	}
+
+	defer func() {
+		if resp.Body != nil {
+			io.Copy(io.Discard, resp.Body) // nolint: errcheck
+			resp.Body.Close()
+		}
+	}()
+
+	if resp.StatusCode >= 400 {
+		fmt.Printf("%+v\n", resp.Header)
+		c.AbortWithError(resp.StatusCode, errors.New(http.StatusText(resp.StatusCode)))
+		return
+	}
+
+	var token = &WhiteBoardToken{}
+	err = json.NewDecoder(resp.Body).Decode(token)
+	if err != nil {
+		c.AbortWithError(resp.StatusCode, err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user_id":    currentUser.UUID,
+		"app_id":     token.AppID,
+		"meeting_id": room.WhiteBoardMeetingID,
+		"token":      token.UserTokens[currentUser.UUID],
+	})
+}
+
 // middleware
 // ----------------------------------------------------------------------------
 
@@ -149,4 +218,70 @@ func GetRoom(c *gin.Context) {
 
 	c.Set("room", room)
 	c.Next()
+}
+
+// ----------------------------------------------------------------------------
+
+// WhiteBoardToken whiteboard token
+type WhiteBoardToken struct {
+	AppID      string            `json:"appId"`
+	MeetingID  string            `json:"meetingId"`
+	BucketID   string            `json:"bucketId"`
+	UserTokens map[string]string `json:"userTokens"`
+}
+
+// createWhiteBoard get room white board info
+func createWhiteBoard(cfg *config.Config) (*WhiteBoardToken, error) {
+
+	mac := &auth.Credentials{
+		AccessKey: cfg.QiniuService.AccessKey,
+		SecretKey: []byte(cfg.QiniuService.SecretKey),
+	}
+
+	args := map[string]interface{}{
+		"type":        0,
+		"aspectRatio": 1.33,
+		"zoomScale":   1,
+		"userIds":     []string{},
+	}
+
+	reqData, _ := json.Marshal(args)
+
+	url := fmt.Sprintf("https://rtc.qiniuapi.com/v4/apps/%s/board/meeting", cfg.QiniuService.RTCAppID)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(reqData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+
+	accessToken, err := mac.SignRequestV2(req)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", "Qiniu "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if resp.Body != nil {
+			io.Copy(io.Discard, resp.Body) // nolint: errcheck
+			resp.Body.Close()
+		}
+	}()
+
+	if resp.StatusCode >= 400 {
+		fmt.Printf("%+v\n", resp.Header)
+		return nil, errors.New(http.StatusText(resp.StatusCode))
+	}
+
+	var token = &WhiteBoardToken{}
+	err = json.NewDecoder(resp.Body).Decode(token)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }

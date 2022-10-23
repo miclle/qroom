@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			body {
+				width: 100vw;
+				height: 100vh;
+			}
+			#canvasBox {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 1;
+				pointer-events: auto;
+			}
+			#fileBox {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+			}
+			#fileIframe {
+				width: 100vw;
+				height: 100vh;
+			}
+		</style>
+		<script type="module" src="./whiteboard_sdk.js"></script>
+		<script type="module" src="./whiteboardCanvasIndex.js"></script>
+	</head>
+	<body>
+		<div id="canvasBox"></div>
+		<div id="fileBox">
+			<iframe id="fileIframe" src="" frameborder="0"></iframe>
+		</div>
+	</body>
+</html>

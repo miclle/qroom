@@ -1,7 +1,7 @@
 import React from "react"
 import { makeAutoObservable, runInAction } from "mobx"
 
-import { IAttendee, IRoom, IRTCInfo, RTC } from "models"
+import { IAttendee, IRoom, IRTCInfo, IWhiteBoardInfo, RTC } from "models"
 import { Room } from "services"
 
 export class RoomStore {
@@ -10,6 +10,8 @@ export class RoomStore {
   info?: IRoom;
 
   rtc?: IRTCInfo;
+
+  whiteboard?: IWhiteBoardInfo
 
   RTC: RTC = new RTC()
 
@@ -29,8 +31,10 @@ export class RoomStore {
     runInAction(async () => {
       if (uuid !== undefined) {
         this.uuid = uuid
+
         this.info = await Room.info(uuid)
         this.rtc = await Room.rtc(uuid)
+        this.whiteboard = await Room.whiteboard(uuid)
 
         this.RTC.init(this.rtc)
       }

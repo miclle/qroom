@@ -23,11 +23,12 @@ type Config struct {
 
 // QiniuService qiniu service config
 type QiniuService struct {
-	AccessKey    string `mapstructure:"access_key"`
-	SecretKey    string `mapstructure:"secret_key"`
-	Bucket       string `mapstructure:"bucket"`
-	BucketDomain string `mapstructure:"bucket_domain"`
-	RTCAppID     string `mapstructure:"rtc_app_id"`
+	AccessKey       string `mapstructure:"access_key"`
+	SecretKey       string `mapstructure:"secret_key"`
+	Bucket          string `mapstructure:"bucket"`
+	BucketDomain    string `mapstructure:"bucket_domain"`
+	RTCAppID        string `mapstructure:"rtc_app_id"`
+	WhiteboardAppID string `mapstructure:"whiteboard_app_id"`
 }
 
 // LoadConfig load config file

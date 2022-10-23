@@ -17,13 +17,16 @@ const (
 
 // Room 房间
 type Room struct {
-	ID        int64      `json:"id"         gorm:"primary_key"`
-	UUID      string     `json:"uuid"       gorm:"unique_index;size:24"` // 房间对外的 UUID，同时将作为 RTC Room Name
-	Name      string     `json:"name"       gorm:"size:128"`             // 自定义房间名称
-	State     RoomState  `json:"state"`                                  // 房间状态: active, archived
-	AdminID   int64      `json:"admin_id"   gorm:"index"`                // 管理员
-	CreatedAt int64      `json:"created_at"`
-	UpdatedAt int64      `json:"updated_at"`
+	ID        int64     `json:"id"         gorm:"primary_key"`
+	UUID      string    `json:"uuid"       gorm:"unique_index;size:24"` // 房间对外的 UUID，同时将作为 RTC Room Name
+	Name      string    `json:"name"       gorm:"size:128"`             // 自定义房间名称
+	State     RoomState `json:"state"`                                  // 房间状态: active, archived
+	AdminID   int64     `json:"admin_id"   gorm:"index"`                // 管理员
+	CreatedAt int64     `json:"created_at"`
+	UpdatedAt int64     `json:"updated_at"`
+
+	WhiteBoardMeetingID string `json:"whiteboard_meeting_id"`
+
 	Attendees []Attendee `json:"attendees"`
 	Self      Attendee   `json:"self"`
 }
