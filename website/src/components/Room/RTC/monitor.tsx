@@ -50,7 +50,7 @@ const Monitor = observer((options: IMonitorOptions) => {
 
   return (
     <div
-      id={`monitor-${user_id}`}
+      id={`monitor-${user_id}-${stream.tag}`}
       className={className({
         "monitor": true,
         "isLocal": isLocal,
