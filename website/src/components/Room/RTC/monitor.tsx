@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
 import { observer } from "mobx-react-lite"
-import { QNCameraVideoTrack, QNLocalAudioTrack, QNMicrophoneAudioTrack, QNRemoteAudioTrack, QNRemoteVideoTrack, QNScreenVideoTrack, QNTrack } from "qnweb-rtc"
+import { QNCameraVideoTrack, QNLocalAudioTrack, QNMicrophoneAudioTrack, QNRemoteAudioTrack, QNRemoteVideoTrack, QNScreenVideoTrack } from "qnweb-rtc"
 import className from "classnames"
 import { BiMicrophoneOff } from "react-icons/bi"
 
