@@ -60,7 +60,10 @@ const Monitor = observer((options: IMonitorOptions) => {
       />
 
       <div className="info">
-        <span>{attendee?.name}</span>
+        <span>
+          {attendee?.name}
+          {stream.tag === 'screen' && ' 屏幕共享'}
+        </span>
         <div className={className({ "audio-status": true, "mute": stream.audioMuted })}>
           {
             (stream.audioTrack && !stream.audioMuted) && <AudioVolume track={stream.audioTrack} />
