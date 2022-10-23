@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
 import { observer } from "mobx-react-lite"
-import { QNCameraVideoTrack, QNLocalAudioTrack, QNMicrophoneAudioTrack, QNRemoteAudioTrack, QNRemoteVideoTrack, QNScreenVideoTrack } from "qnweb-rtc"
 import className from "classnames"
 import { BiMicrophoneOff } from "react-icons/bi"
 
@@ -12,7 +11,6 @@ interface IMonitorOptions {
   user_id: string
   isLocal: boolean
   stream: Stream
-  // tracks: QNTrack[]
 }
 
 const Monitor = observer((options: IMonitorOptions) => {
@@ -23,37 +21,20 @@ const Monitor = observer((options: IMonitorOptions) => {
   const [attendee, setAttendee] = useState<IAttendee | undefined>(undefined)
   const playerRef = useRef<HTMLDivElement>(null)
 
-  const [audioTrack, setAudioTrack] = useState<QNMicrophoneAudioTrack | QNLocalAudioTrack | QNRemoteAudioTrack>()
-  const [videoTrack, setVideoTrack] = useState<QNCameraVideoTrack | QNScreenVideoTrack | QNRemoteVideoTrack>()
+  useEffect(() => {
+    const playerElement = playerRef.current
+    if (!playerElement) return
+    if (!stream.videoTrack) return
+    stream.videoTrack.play(playerElement, { mirror: true })
+  }, [stream.videoTrack])
 
   useEffect(() => {
-    stream.tracks.forEach((track) => {
+    const playerElement = playerRef.current
+    if (!playerElement) return
 
-      const playerElement = playerRef.current
-      if (!playerElement) return
-
-      const tag = track.tag || 'other'
-
-      let span
-      let elements = playerRef.current.getElementsByClassName(tag)
-      if (elements.length > 0) {
-        span = elements[0] as HTMLElement
-      } else {
-        span = document.createElement('span');
-        span.className = tag
-        playerRef.current.appendChild(span);
-      }
-
-      if (track.isAudio()) {
-        setAudioTrack(track as QNMicrophoneAudioTrack | QNLocalAudioTrack | QNRemoteAudioTrack)
-        if (!isLocal) track.play(span)
-      }
-      if (track.isVideo()) {
-        setVideoTrack(track as QNCameraVideoTrack | QNScreenVideoTrack | QNRemoteVideoTrack)
-        track.play(span, { mirror: true })
-      }
-    })
-  }, [isLocal, stream.tracks])
+    if (!stream.audioTrack || stream.isLocal) return
+    stream.audioTrack.play(playerElement)
+  }, [stream])
 
   useEffect(() => {
     const attendee = roomStore.attendees?.find(item => item.uuid === user_id)
@@ -73,19 +54,19 @@ const Monitor = observer((options: IMonitorOptions) => {
         ref={playerRef}
         className={className({
           "player": true,
-          "video-mute": videoTrack?.isMuted(),
-          "audio-mute": audioTrack?.isMuted()
+          "video-mute": stream.videoMuted,
+          "audio-mute": stream.audioMuted
         })}
       />
 
       <div className="info">
         <span>{attendee?.name}</span>
-        <div className={className({ "audio-status": true, "mute": audioTrack?.isMuted() })}>
+        <div className={className({ "audio-status": true, "mute": stream.audioMuted })}>
           {
-            (audioTrack && !audioTrack.isMuted()) && <AudioVolume track={audioTrack} />
+            (stream.audioTrack && !stream.audioMuted) && <AudioVolume track={stream.audioTrack} />
           }
           {
-            (audioTrack && audioTrack.isMuted()) && <BiMicrophoneOff height={18} />
+            (stream.audioTrack && stream.audioMuted) && <BiMicrophoneOff height={18} />
           }
         </div>
       </div>

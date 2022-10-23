@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { observer } from "mobx-react-lite"
-import { Button, Col, Form, Input, Layout, Modal, notification, Row } from "antd"
-import { Link, useParams } from "react-router-dom"
+import { Button, Form, Input, Layout, Modal, notification } from "antd"
+import { useParams } from "react-router-dom"
 
 import { IUser } from "models";
 import { User } from "services";
 import { useGlobalContext } from "GlobalStore";
 import { RoomContext, RoomStore } from "./context";
+import Navbar from "./Navbar";
 import RTC from "./RTC";
 
 const Room = observer(() => {
@@ -68,18 +69,8 @@ const Room = observer(() => {
 
       <RoomContext.Provider value={roomStore}>
         <Layout className="room">
-          <Layout.Header>
-            <Row>
-              <Col flex="auto">
-                <Link className="brand" to="/">
-                  <span>QROOM</span>
-                  <sup>Beta</sup>
-                </Link>
-              </Col>
 
-              <Col className="navs" />
-            </Row>
-          </Layout.Header>
+          <Navbar />
 
           {
             store.user.signed_in &&

@@ -20,7 +20,12 @@ const RTC = observer(() => {
   return (
     <div className="streams">
       {
-        streams.map((stream) => <Monitor key={stream.user_id} user_id={stream.user_id || ''} isLocal={stream.isLocal} stream={stream} />)
+        streams.map((stream) => <Monitor
+          key={`${stream.user_id}-${stream.tag}`}
+          user_id={stream.user_id || ''}
+          isLocal={stream.isLocal}
+          stream={stream}
+        />)
       }
     </div>
   )

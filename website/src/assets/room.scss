@@ -22,12 +22,13 @@
 
   .navbar-brand{
     font-weight: 600;
+    color: #fff;
     span{
       margin-right: 5px;
     }
   }
 
-  .nav-item > .btn{
+  .nav-item > .ant-btn{
     margin: 0.25rem !important;
     position: relative;
 
@@ -53,9 +54,10 @@
 
     .nav-item{
       display: inline-block;
+      color: #fff;
     }
 
-    .app-btn-link{
+    .ant-btn-link{
       min-width: 42px;
       padding: 0.25rem 0.25rem;
       text-align: center;

@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx"
-import QNRTC, { QNRemoteAudioTrack, QNRemoteVideoTrack, QNRTCClient } from "qnweb-rtc"
+import QNRTC, { QNRemoteAudioTrack, QNRemoteTrack, QNRemoteVideoTrack, QNRTCClient, QNScreenVideoTrack } from "qnweb-rtc"
 
 import { IRTCInfo, Stream } from "models";
 
@@ -12,6 +12,8 @@ export class RTC {
   isFullscreen: boolean = false
 
   localStream: Stream = new Stream()
+
+  localScreenStream?: Stream;
 
   streams: Stream[] = []
   // streams = observable.array<Stream>([], { deep: true })
@@ -31,9 +33,10 @@ export class RTC {
     console.log("my local tracks", localTracks);
 
     this.localStream.user_id = this.client.userID || this.info.userID
-    this.localStream.tracks.push(localTracks[0], localTracks[1])
-    // this.localStream.pushTrack([localTracks[0], localTracks[1]])
     this.localStream.isLocal = true
+    this.localStream.tag = 'mc'
+    this.localStream.audioTrack = localTracks[0]
+    this.localStream.videoTrack = localTracks[1]
 
     await this.client.publish(localTracks);
     console.log('publish success! client.userID: ', this.client.userID);
@@ -42,16 +45,7 @@ export class RTC {
 
     // ----------------------------------------------------------------
 
-    this.client.remoteUsers.forEach(async (user) => {
-
-      const stream = new Stream()
-      stream.user_id = user.userID
-
-      const { videoTracks, audioTracks } = await this.client.subscribe([...user.getVideoTracks(), ...user.getAudioTracks()])
-      // stream.tracks.push(...videoTracks, ...audioTracks)
-      stream.pushTrack([...videoTracks, ...audioTracks])
-      this.streams.push(stream)
-    })
+    this.subscribeRemoteUser()
 
     // ----------------------------------------------------------------
 
@@ -71,47 +65,98 @@ export class RTC {
 
     // 订阅远端音视频
     this.client.on("user-published", async (userID: string, qntrack: (QNRemoteAudioTrack | QNRemoteVideoTrack)[]) => {
-      runInAction(async() => {
+      runInAction(async () => {
         const { videoTracks, audioTracks } = await this.client.subscribe(qntrack)
-        let stream = this.streams.find(item => item.user_id === userID)
-        if (stream === undefined) {
-          stream = new Stream()
-          stream.user_id = userID
-          this.streams.push(stream)
-        }
 
-        stream.pushTrack([...videoTracks, ...audioTracks])
+        videoTracks.forEach((track) => {
+          let stream = this.streams.find(item => item.user_id === userID && item.tag === track.tag)
+          if (stream === undefined) {
+            stream = new Stream()
+            stream.user_id = userID
+            stream.tag = track.tag || 'mc'
+            this.streams.push(stream)
+          }
+          stream.videoTrack = track
+        })
+
+        audioTracks.forEach((track) => {
+          let stream = this.streams.find(item => item.user_id === userID && item.tag === track.tag)
+          if (stream === undefined) {
+            stream = new Stream()
+            stream.user_id = userID
+            stream.tag = track.tag || 'mc'
+            this.streams.push(stream)
+          }
+          stream.audioTrack = track
+        })
+
+        this.muteStateChanged([...videoTracks, ...audioTracks])
       })
     })
+  }
 
-    // 远程用户更新静音状态
-    // this.client.on("user-mute-updated", (user: IAgoraRTCRemoteUser) => {
-    //   const stream = this.streams.find(item => item.uid === user.uid)
-    //   if (stream === undefined) { return }
-    //   stream.audioMuted = user.audioMuted
-    //   stream.videoMuted = user.videoMuted
-    // })
+  subscribeRemoteUser() {
+    this.client.remoteUsers.forEach(async (user) => {
+      const { videoTracks, audioTracks } = await this.client.subscribe([...user.getVideoTracks(), ...user.getAudioTracks()])
+
+      const mcStream = new Stream()
+      const screenStream = new Stream()
+
+      videoTracks.forEach((track) => {
+        if (track.tag === 'mc') mcStream.videoTrack = track;
+        if (track.tag === 'screen') screenStream.videoTrack = track;
+      })
+
+      audioTracks.forEach((track) => {
+        if (track.tag === 'mc') mcStream.audioTrack = track;
+        if (track.tag === 'screen') screenStream.audioTrack = track;
+      })
+
+      if (mcStream.videoTrack !== undefined || mcStream.audioTrack !== undefined) {
+        mcStream.user_id = user.userID
+        this.streams.push(mcStream)
+      }
+
+      if (screenStream.videoTrack !== undefined || screenStream.audioTrack !== undefined) {
+        screenStream.user_id = user.userID
+        this.streams.push(screenStream)
+      }
+
+      this.muteStateChanged([...videoTracks, ...audioTracks])
+    })
+  }
+
+  // 远程用户更新静音状态
+  muteStateChanged(tracks: QNRemoteTrack[]) {
+    tracks.forEach((track) => {
+      (function (track, streams) {
+        track.on('mute-state-changed', (isMuted: boolean) => {
+          runInAction(async () => {
+            const stream = streams.find(item => item.user_id === track.userID && item.tag === track.tag)
+            if (stream === undefined) { return }
+            if (track.isAudio()) stream.audioMuted = isMuted
+            if (track.isVideo()) stream.videoMuted = isMuted
+          })
+        })
+      })(track, this.streams)
+    })
   }
 
   async shareScreen() {
-    // if (this.info === undefined) return
+    if (this.info === undefined) return
 
-    // this.screenClient = AgoraRTC.createClient({mode: "rtc", codec: "vp8"})
+    const screenTrack = await QNRTC.createScreenVideoTrack({
+      screenVideoTag: 'screen',
+      screenAudioTag: 'screen'
+    }, 'disable') as QNScreenVideoTrack
 
-    // this.localScreenStream = new Stream()
+    await this.client.publish(screenTrack)
 
-    // this.localScreenStream.uid = await this.screenClient.join(this.info.app_id, this.info.channel, this.info.screen_rtc_token, this.info.screen_uid)
-
-    // 创建屏幕共享 track
-    // this.localScreenStream.videoTrack = await AgoraRTC.createScreenVideoTrack({ encoderConfig: "1080p_1" })
-
-    // 发布本地音视频
-    // await this.screenClient.publish(this.localScreenStream.videoTrack)
-
-    // this.localScreenStream.audioMuted = this.localScreenStream.videoTrack.isMuted
-    // this.localScreenStream.isLocal = true
-
-    // this.streams.push(this.localScreenStream)
+    this.localScreenStream = new Stream()
+    this.localScreenStream.user_id = this.info.userID
+    this.localScreenStream.isLocal = true
+    this.localScreenStream.videoTrack = screenTrack
+    this.streams.push(this.localScreenStream)
   }
 
   // setLocalVideoTrackClarity(clarity: VideoEncoderConfigurationPreset) {
@@ -123,7 +168,7 @@ export class RTC {
   // }
 
   setLocalTrackMute(kind: "audio" | "video", muted: boolean) {
-    // this.localStream.muteTrack(kind, muted)
+    this.localStream.muteTrack(kind, muted)
   }
 
   async leave() {

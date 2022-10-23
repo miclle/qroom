@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from "mobx"
-import { QNLocalTrack, QNTrack } from "qnweb-rtc"
+import { QNCameraVideoTrack, QNLocalAudioTrack, QNLocalTrack, QNMicrophoneAudioTrack, QNRemoteAudioTrack, QNRemoteVideoTrack, QNScreenVideoTrack } from "qnweb-rtc"
 import { IAttendee } from "models"
 
 export class Stream {
@@ -10,51 +10,55 @@ export class Stream {
 
   isLocal: boolean = false
 
-  tracks: QNTrack[] = []
+  tag: string = '';
+
+  audioTrack?: QNMicrophoneAudioTrack | QNLocalAudioTrack | QNRemoteAudioTrack;
+  audioMuted: boolean = false;
+
+  videoTrack?: QNCameraVideoTrack | QNScreenVideoTrack | QNRemoteVideoTrack;
+  videoMuted: boolean = false;
+
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  pushTrack(tracks: QNTrack[]) {
+  muteTrack(kind: "audio" | "video", muted: boolean) {
+    console.log('muteTrack', kind, muted);
     runInAction(() => {
-
-      tracks.forEach((track) => {
-        let index = this.tracks.findIndex(item => item.trackID === track.trackID)
-        if (index < 0) {
-          this.tracks.push(track)
-        }
-      })
-
+      switch (kind) {
+        case "audio":
+          if (this.isLocal && this.audioTrack) {
+            const localAudioTrack = this.audioTrack as QNLocalTrack
+            localAudioTrack.setMuted(muted);
+            this.audioMuted = muted
+          }
+          break
+        case "video":
+          if (this.isLocal && this.videoTrack) {
+            const localVideoTrack = this.videoTrack as QNLocalTrack
+            localVideoTrack.setMuted(muted)
+            this.videoMuted = muted
+          }
+          break
+      }
     })
   }
 
-  // muteTrack(kind: "audio" | "video", muted: boolean) {
-  //   switch (kind) {
-  //     case "audio":
-  //       if (this.isLocal && this.audioTracks) {
-  //         const localAudioTrack = this.audioTracks as QNLocalTrack
-  //         localAudioTrack.setMuted(muted);
-  //       }
-  //       break
-  //     case "video":
-  //       if (this.isLocal && this.videoTracks) {
-  //         const localVideoTrack = this.videoTracks as QNLocalTrack
-  //         localVideoTrack.setMuted(muted)
-  //       }
-  //       break
-  //   }
-  // }
-
   release() {
     runInAction(() => {
-      if (this.isLocal) {
-        this.tracks.forEach((track) => {
-          const localTrack = track as QNLocalTrack
-          localTrack.destroy()
-        })
+      const localAudioTrack = this.audioTrack as QNLocalTrack
+      if (localAudioTrack) {
+        localAudioTrack.destroy()
       }
-      this.tracks = []
+
+      const localVideoTrack = this.videoTrack as QNLocalTrack
+      if (localVideoTrack) {
+        localVideoTrack.destroy()
+      }
+
+      this.audioTrack = undefined
+      this.videoTrack = undefined
     })
   }
 }
