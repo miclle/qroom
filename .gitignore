@@ -129,3 +129,6 @@ coverage.html
 
 # binary
 cmd/qroom/qroom
+
+cmd/qroom/public/*
+!cmd/qroom/public/.website-app-not-built.html
